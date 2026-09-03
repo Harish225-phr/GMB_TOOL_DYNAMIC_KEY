@@ -47,10 +47,8 @@ class GooglePlacesAPIClient:
         """
         self.api_key = api_key or config.GOOGLE_API_KEY
         
-        if not self.api_key:
-            raise ValueError("Google Maps API key not configured")
-        
         # Create session with optimized connection pooling
+
         self.session = self._create_session()
         
         # Track consecutive quota errors for adaptive backoff
@@ -121,6 +119,7 @@ class GooglePlacesAPIClient:
         query: str,
         page_token: Optional[str] = None,
         region: Optional[str] = None,
+        api_key: Optional[str] = None,
     ) -> Tuple[Dict[str, Any], int]:
         """
         Perform text search using Google Places Text Search API.
@@ -140,9 +139,13 @@ class GooglePlacesAPIClient:
         # Apply rate limiting
         get_rate_limiter().wait_if_needed()
         
+        active_api_key = api_key or self.api_key
+        if not active_api_key:
+            raise ValueError("Google Maps API key not provided")
+            
         params = {
             "query": query,
-            "key": self.api_key,
+            "key": active_api_key,
         }
         
         if page_token:
@@ -209,6 +212,7 @@ class GooglePlacesAPIClient:
         self,
         place_id: str,
         fields: Optional[list] = None,
+        api_key: Optional[str] = None,
     ) -> Tuple[Dict[str, Any], int]:
         """
         Get detailed information about a place.
@@ -226,10 +230,14 @@ class GooglePlacesAPIClient:
         if fields is None:
             fields = ["website", "name", "rating", "user_ratings_total"]
         
+        active_api_key = api_key or self.api_key
+        if not active_api_key:
+            raise ValueError("Google Maps API key not provided")
+            
         params = {
             "place_id": place_id,
             "fields": ",".join(fields),
-            "key": self.api_key,
+            "key": active_api_key,
         }
         
         try:
@@ -321,6 +329,7 @@ class CachedGooglePlacesAPIClient(GooglePlacesAPIClient):
         page_token: Optional[str] = None,
         region: Optional[str] = None,
         use_cache: bool = True,
+        api_key: Optional[str] = None,
     ) -> Tuple[Dict[str, Any], int]:
         """
         Text search with optional caching.
@@ -341,7 +350,7 @@ class CachedGooglePlacesAPIClient(GooglePlacesAPIClient):
             return self._search_cache[cache_key], 200
         
         # Fetch from API
-        result, status = super().text_search(query, page_token, region)
+        result, status = super().text_search(query, page_token, region, api_key)
         
         # Cache first page results
         if cache_key:
@@ -354,6 +363,7 @@ class CachedGooglePlacesAPIClient(GooglePlacesAPIClient):
         place_id: str,
         fields: Optional[list] = None,
         use_cache: bool = True,
+        api_key: Optional[str] = None,
     ) -> Tuple[Dict[str, Any], int]:
         """
         Get place details with optional caching.
@@ -369,7 +379,7 @@ class CachedGooglePlacesAPIClient(GooglePlacesAPIClient):
         if use_cache and place_id in self._details_cache:
             return self._details_cache[place_id], 200
         
-        result, status = super().get_place_details(place_id, fields)
+        result, status = super().get_place_details(place_id, fields, api_key)
         
         if use_cache:
             self._details_cache[place_id] = result

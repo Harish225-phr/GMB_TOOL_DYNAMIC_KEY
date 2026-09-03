@@ -106,6 +106,7 @@ class LeadScraperEngine:
         fetch_websites: Optional[bool] = None,
         max_pages: Optional[int] = None,
         max_results: Optional[int] = None,
+        api_key: Optional[str] = None,
     ) -> SearchResult:
         """
         Search for leads in a single location.
@@ -155,7 +156,8 @@ class LeadScraperEngine:
             try:
                 response, status_code = self.api_client.text_search(
                     query,
-                    page_token=current_page_token
+                    page_token=current_page_token,
+                    api_key=api_key
                 )
                 
                 self.metrics["total_api_calls"] += 1
@@ -209,7 +211,8 @@ class LeadScraperEngine:
         if place_ids:
             websites = self.website_fetcher.fetch_websites_if_needed(
                 place_ids,
-                fetch_websites
+                fetch_websites,
+                api_key=api_key
             )
             for result in results:
                 if result.place_id in websites:
@@ -252,6 +255,7 @@ class LeadScraperEngine:
         location: str,
         fetch_websites: Optional[bool] = None,
         max_results_per_location: Optional[int] = None,
+        api_key: Optional[str] = None,
     ) -> AggregatedSearchResult:
         """
         Search across expanded locations using geo-grid.
@@ -291,6 +295,7 @@ class LeadScraperEngine:
                     keyword,
                     search_location,
                     fetch_websites=fetch_websites,
+                    api_key=api_key,
                 )
                 results_by_location[search_location] = result.results
                 

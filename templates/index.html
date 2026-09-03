@@ -454,6 +454,9 @@
     </div>
 
     <div class="search-card">
+        <div style="margin-bottom: 15px;">
+            <input type="password" id="api-key" class="form-control" placeholder="🔑 Enter Google Maps API Key (Optional if already set on server)">
+        </div>
         <div class="search-row" style="grid-template-columns: 1fr auto;">
             <div>
                 <input type="text" id="keyword-multi" class="form-control" placeholder="🔍 What to search? (Restaurant, Plumber, etc.)" style="margin-bottom: 10px;">
@@ -486,6 +489,14 @@
 </div>
 
 <script>
+    // Load API key on start
+    document.addEventListener("DOMContentLoaded", () => {
+        const savedApiKey = localStorage.getItem("gmb_api_key");
+        if (savedApiKey) {
+            document.getElementById("api-key").value = savedApiKey;
+        }
+    });
+
     // Safe JSON parsing helper
     async function safeParseJSON(response) {
         const text = await response.text();
@@ -531,11 +542,14 @@
         loaderContainer.classList.add("active");
         searchBtn.disabled = true;
 
+        const apiKey = document.getElementById("api-key") ? document.getElementById("api-key").value.trim() : "";
+        if (apiKey) localStorage.setItem("gmb_api_key", apiKey);
+
         try {
             const response = await fetch("/search", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ keyword, location, page_token: null })
+                body: JSON.stringify({ keyword, location, page_token: null, api_key: apiKey })
             });
 
             const result = await safeParseJSON(response);
@@ -619,6 +633,9 @@
                 batchSessionId = `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             }
             
+            const apiKey = document.getElementById("api-key") ? document.getElementById("api-key").value.trim() : "";
+            if (apiKey) localStorage.setItem("gmb_api_key", apiKey);
+            
             const response = await fetch("/search-batch", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -630,6 +647,7 @@
                     batch_index: batchIndex,
                     use_expansion: false,
                     fetch_websites: true,
+                    api_key: apiKey
                 })
             });
             
@@ -720,12 +738,16 @@
             }, 500);
 
             try {
+                const apiKey = document.getElementById("api-key") ? document.getElementById("api-key").value.trim() : "";
+                if (apiKey) localStorage.setItem("gmb_api_key", apiKey);
+                
                 const response = await fetch("/search-multiple", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ 
                         keyword, 
-                        locations: locationsInput 
+                        locations: locationsInput,
+                        api_key: apiKey
                     })
                 });
 
@@ -892,13 +914,16 @@
         loadMoreBtn.innerHTML = '<span class="spinner-small"></span> Loading...';
 
         try {
+            const apiKey = document.getElementById("api-key") ? document.getElementById("api-key").value.trim() : "";
+            
             const response = await fetch("/search", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
                     keyword: currentKeyword, 
                     location: currentLocation, 
-                    page_token: nextPageToken 
+                    page_token: nextPageToken,
+                    api_key: apiKey
                 })
             });
 

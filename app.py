@@ -162,12 +162,14 @@ def search():
                 "details": "Google API Key not configured. Set GOOGLE_MAPS_API_KEY environment variable."
             }), 503
         
+        api_key = request.json.get("api_key") or config.GOOGLE_API_KEY
+        
         # Check if API key is configured
-        if not config.GOOGLE_API_KEY:
+        if not api_key:
             return jsonify({
                 "error": "API Key not configured",
-                "details": "Set GOOGLE_MAPS_API_KEY environment variable to use search functionality"
-            }), 503
+                "details": "Please provide an API key in the request or set GOOGLE_MAPS_API_KEY environment variable"
+            }), 401
         
         # Validate request
         if not request.json:
@@ -193,14 +195,16 @@ def search():
                 keyword=keyword,
                 location=location,
                 fetch_websites=fetch_websites,
-                max_results_per_location=max_results
+                max_results_per_location=max_results,
+                api_key=api_key
             )
         else:
             result = scraper_engine.search_single_location(
                 keyword=keyword,
                 location=location,
                 fetch_websites=fetch_websites,
-                max_results=max_results
+                max_results=max_results,
+                api_key=api_key
             )
         
         response_data = result.to_dict()
@@ -259,11 +263,12 @@ def search_batch():
                 "details": "Google API Key not configured. Set GOOGLE_MAPS_API_KEY environment variable."
             }), 503
         
-        if not config.GOOGLE_API_KEY:
+        api_key = request.json.get("api_key") or config.GOOGLE_API_KEY
+        if not api_key:
             return jsonify({
                 "error": "API Key not configured",
-                "details": "Set GOOGLE_MAPS_API_KEY environment variable to use search functionality"
-            }), 503
+                "details": "Please provide an API key in the request or set GOOGLE_MAPS_API_KEY environment variable"
+            }), 401
         
         if not request.json:
             return jsonify({"error": "Invalid JSON request"}), 400
@@ -329,11 +334,11 @@ def search_batch():
             try:
                 if use_expansion:
                     result = scraper_engine.search_with_expansion(
-                        keyword, location, fetch_websites
+                        keyword, location, fetch_websites, api_key=api_key
                     )
                 else:
                     result = scraper_engine.search_single_location(
-                        keyword, location, fetch_websites
+                        keyword, location, fetch_websites, api_key=api_key
                     )
                 
                 batch_processor.mark_location_completed(session_id, location)
@@ -441,12 +446,13 @@ def search_multiple():
                 "details": "Google API Key not configured. Set GOOGLE_MAPS_API_KEY environment variable."
             }), 503
         
+        api_key = request.json.get("api_key") or config.GOOGLE_API_KEY
         # Check if API key is configured
-        if not config.GOOGLE_API_KEY:
+        if not api_key:
             return jsonify({
                 "error": "API Key not configured",
-                "details": "Set GOOGLE_MAPS_API_KEY environment variable to use search functionality"
-            }), 503
+                "details": "Please provide an API key in the request or set GOOGLE_MAPS_API_KEY environment variable"
+            }), 401
         
         if not request.json:
             return jsonify({"error": "Invalid JSON request"}), 400
@@ -476,11 +482,11 @@ def search_multiple():
             try:
                 if use_expansion:
                     result = scraper_engine.search_with_expansion(
-                        keyword, location, fetch_websites
+                        keyword, location, fetch_websites, api_key=api_key
                     )
                 else:
                     result = scraper_engine.search_single_location(
-                        keyword, location, fetch_websites
+                        keyword, location, fetch_websites, api_key=api_key
                     )
                 return (location, result.to_dict())
             except Exception as e:

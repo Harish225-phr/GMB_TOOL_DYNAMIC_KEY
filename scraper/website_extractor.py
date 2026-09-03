@@ -31,12 +31,13 @@ class WebsiteExtractor:
         self._website_cache: Dict[str, Optional[str]] = {}
         self._cache_lock = threading.Lock()
     
-    def extract_website(self, place_id: str) -> Optional[str]:
+    def extract_website(self, place_id: str, api_key: Optional[str] = None) -> Optional[str]:
         """
         Extract website for a single place.
         
         Args:
             place_id: Google Place ID
+            api_key: Optional Google API key
         
         Returns:
             Website URL or None
@@ -54,7 +55,8 @@ class WebsiteExtractor:
             with get_concurrency_controller():
                 response, status_code = self.api_client.get_place_details(
                     place_id,
-                    fields=["website"]
+                    fields=["website"],
+                    api_key=api_key
                 )
             
             if response.get("status") == GooglePlacesAPIClient.STATUS_OK:
@@ -82,7 +84,8 @@ class WebsiteExtractor:
     def extract_websites_batch(
         self,
         place_ids: List[str],
-        skip_none: bool = False
+        skip_none: bool = False,
+        api_key: Optional[str] = None
     ) -> Dict[str, Optional[str]]:
         """
         Extract websites for multiple places in parallel.
@@ -90,6 +93,7 @@ class WebsiteExtractor:
         Args:
             place_ids: List of Google Place IDs
             skip_none: If True, don't return None values
+            api_key: Optional Google API key
         
         Returns:
             Dict mapping place_id to website URL
@@ -116,7 +120,7 @@ class WebsiteExtractor:
         # Fetch uncached results in parallel
         with ThreadPoolExecutor(max_workers=config.MAX_WORKERS) as executor:
             futures: Dict[Future, str] = {
-                executor.submit(self.extract_website, pid): pid
+                executor.submit(self.extract_website, pid, api_key): pid
                 for pid in to_fetch
             }
             
@@ -223,7 +227,8 @@ class OptionalWebsiteFetcher:
     def fetch_websites_if_needed(
         self,
         place_ids: List[str],
-        fetch_enabled: Optional[bool] = None
+        fetch_enabled: Optional[bool] = None,
+        api_key: Optional[str] = None
     ) -> Dict[str, Optional[str]]:
         """
         Conditionally fetch websites.
@@ -231,6 +236,7 @@ class OptionalWebsiteFetcher:
         Args:
             place_ids: List of place IDs
             fetch_enabled: Override default setting (None = use default)
+            api_key: Optional Google API key
         
         Returns:
             Dict of place_id -> website (empty dict if fetching disabled)
@@ -244,7 +250,7 @@ class OptionalWebsiteFetcher:
             print("[INFO] Website fetching disabled - skipping website extraction")
             return {}
         
-        return self.extractor.extract_websites_batch(place_ids)
+        return self.extractor.extract_websites_batch(place_ids, api_key=api_key)
     
     def get_extractor(self) -> WebsiteExtractor:
         """Get underlying extractor for direct access."""
