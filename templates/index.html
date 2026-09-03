@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,7 +37,7 @@
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .header p {
@@ -49,7 +50,7 @@
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             animation: slideUp 0.6s ease-out;
         }
 
@@ -108,7 +109,7 @@
             padding: 40px;
             background: white;
             border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
             animation: slideUp 0.4s ease-out;
         }
@@ -128,8 +129,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .loader-text {
@@ -149,14 +155,14 @@
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
             border-left: 4px solid #667eea;
         }
 
         .result-card:hover {
             transform: translateX(5px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
         }
 
         .result-header {
@@ -234,7 +240,7 @@
             padding: 60px 20px;
             background: white;
             border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
         }
 
         .empty-state i {
@@ -316,6 +322,7 @@
                 opacity: 0;
                 transform: translateY(-20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -327,6 +334,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -359,7 +367,7 @@
             background: white;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
             margin-bottom: 20px;
         }
 
@@ -445,351 +453,357 @@
         }
     </style>
 </head>
+
 <body>
 
-<div class="main-container">
-    <div class="header">
-        <h1><i class="fas fa-map-location-dot"></i> GMB Pro Tool</h1>
-        <p>Find & Analyze Local Businesses Instantly</p>
-    </div>
-
-    <div class="search-card">
-        <div style="margin-bottom: 15px;">
-            <input type="password" id="api-key" class="form-control" placeholder="🔑 Enter Google Maps API Key (Optional if already set on server)">
+    <div class="main-container">
+        <div class="header">
+            <h1><i class="fas fa-map-location-dot"></i> GMB Pro Tool</h1>
         </div>
-        <div class="search-row" style="grid-template-columns: 1fr auto;">
-            <div>
-                <input type="text" id="keyword-multi" class="form-control" placeholder="🔍 What to search? (Restaurant, Plumber, etc.)" style="margin-bottom: 10px;">
-                <small style="color: #999; margin-top: 8px; display: block;">👇 Enter locations separated by commas (add as many as you want!)</small>
-                <textarea id="locations-multi" class="form-control" placeholder="Mumbai, Delhi, Bangalore, Pune, Hyderabad, Kolkata, Chennai, Jaipur, Lucknow, Kanpur..." style="margin-top: 10px; min-height: 60px; font-size: 0.9rem; padding: 10px;"></textarea>
+
+        <div class="search-card">
+            <div style="margin-bottom: 15px;">
+                <input type="password" id="api-key" class="form-control"
+                    placeholder="🔑 Enter Google Maps API Key (Optional if already set on server)">
             </div>
-            <button onclick="searchMultipleLocations()" class="btn-search" id="searchMultiBtn" style="height: fit-content; white-space: nowrap;">
-                <i class="fas fa-search"></i> Search
+            <div class="search-row" style="grid-template-columns: 1fr auto;">
+                <div>
+                    <input type="text" id="keyword-multi" class="form-control"
+                        placeholder="🔍 What to search? (Restaurant, Plumber, etc.)" style="margin-bottom: 10px;">
+                    <small style="color: #999; margin-top: 8px; display: block;">👇 Enter locations separated by commas
+                        (add as many as you want!)</small>
+                    <textarea id="locations-multi" class="form-control"
+                        placeholder="Mumbai, Delhi, Bangalore, Pune, Hyderabad, Kolkata, Chennai, Jaipur, Lucknow, Kanpur..."
+                        style="margin-top: 10px; min-height: 60px; font-size: 0.9rem; padding: 10px;"></textarea>
+                </div>
+                <button onclick="searchMultipleLocations()" class="btn-search" id="searchMultiBtn"
+                    style="height: fit-content; white-space: nowrap;">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+        </div>
+
+        <div class="error-alert" id="errorAlert"></div>
+
+        <div class="loader-container" id="loaderContainer">
+            <div class="spinner"></div>
+            <div class="loader-text">🔄 Searching Local Businesses...</div>
+        </div>
+
+        <div class="results-container" id="resultsContainer"></div>
+
+        <div class="load-more-container" id="loadMoreContainer">
+            <button onclick="loadMore()" class="btn-load-more" id="loadMoreBtn">
+                <i class="fas fa-arrow-down"></i> Load More Results
             </button>
+            <div class="no-more-results" id="noMoreResults" style="display: none;">
+                <i class="fas fa-check-circle"></i> No more results available
+            </div>
         </div>
     </div>
 
-    <div class="error-alert" id="errorAlert"></div>
+    <script>
+        // Load API key on start
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedApiKey = localStorage.getItem("gmb_api_key");
+            if (savedApiKey) {
+                document.getElementById("api-key").value = savedApiKey;
+            }
+        });
 
-    <div class="loader-container" id="loaderContainer">
-        <div class="spinner"></div>
-        <div class="loader-text">🔄 Searching Local Businesses...</div>
-    </div>
-
-    <div class="results-container" id="resultsContainer"></div>
-
-    <div class="load-more-container" id="loadMoreContainer">
-        <button onclick="loadMore()" class="btn-load-more" id="loadMoreBtn">
-            <i class="fas fa-arrow-down"></i> Load More Results
-        </button>
-        <div class="no-more-results" id="noMoreResults" style="display: none;">
-            <i class="fas fa-check-circle"></i> No more results available
-        </div>
-    </div>
-</div>
-
-<script>
-    // Load API key on start
-    document.addEventListener("DOMContentLoaded", () => {
-        const savedApiKey = localStorage.getItem("gmb_api_key");
-        if (savedApiKey) {
-            document.getElementById("api-key").value = savedApiKey;
-        }
-    });
-
-    // Safe JSON parsing helper
-    async function safeParseJSON(response) {
-        const text = await response.text();
-        if (!text) {
-            throw new Error("Empty response from server (502 error possible)");
-        }
-        try {
-            return JSON.parse(text);
-        } catch (e) {
-            console.error("JSON parse error. Response text:", text);
-            throw new Error(`Invalid JSON response: ${e.message}`);
-        }
-    }
-
-    async function searchData() {
-        const keyword = document.getElementById("keyword").value.trim();
-        const location = document.getElementById("location").value.trim();
-        const errorAlert = document.getElementById("errorAlert");
-        const loaderContainer = document.getElementById("loaderContainer");
-        const resultsContainer = document.getElementById("resultsContainer");
-        const searchBtn = document.getElementById("searchBtn");
-        const loadMoreContainer = document.getElementById("loadMoreContainer");
-
-        // Clear previous results and errors
-        errorAlert.classList.remove("show");
-        resultsContainer.innerHTML = "";
-        loadMoreContainer.style.display = "none";
-
-        // Validation
-        if (!keyword || !location) {
-            errorAlert.innerHTML = "<i class='fas fa-exclamation-circle'></i> Please enter both keyword and location!";
-            errorAlert.classList.add("show");
-            return;
+        // Safe JSON parsing helper
+        async function safeParseJSON(response) {
+            const text = await response.text();
+            if (!text) {
+                throw new Error("Empty response from server (502 error possible)");
+            }
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error("JSON parse error. Response text:", text);
+                throw new Error(`Invalid JSON response: ${e.message}`);
+            }
         }
 
-        // Reset pagination
-        currentKeyword = keyword;
-        currentLocation = location;
-        nextPageToken = null;
-        totalResultsCount = 0;  // Reset count for new search
+        async function searchData() {
+            const keyword = document.getElementById("keyword").value.trim();
+            const location = document.getElementById("location").value.trim();
+            const errorAlert = document.getElementById("errorAlert");
+            const loaderContainer = document.getElementById("loaderContainer");
+            const resultsContainer = document.getElementById("resultsContainer");
+            const searchBtn = document.getElementById("searchBtn");
+            const loadMoreContainer = document.getElementById("loadMoreContainer");
 
-        // Show loader
-        loaderContainer.classList.add("active");
-        searchBtn.disabled = true;
+            // Clear previous results and errors
+            errorAlert.classList.remove("show");
+            resultsContainer.innerHTML = "";
+            loadMoreContainer.style.display = "none";
 
-        const apiKey = document.getElementById("api-key") ? document.getElementById("api-key").value.trim() : "";
-        if (apiKey) localStorage.setItem("gmb_api_key", apiKey);
-
-        try {
-            const response = await fetch("/search", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ keyword, location, page_token: null, api_key: apiKey })
-            });
-
-            const result = await safeParseJSON(response);
-
-            // Hide loader
-            loaderContainer.classList.remove("active");
-            searchBtn.disabled = false;
-
-            if (!response.ok) {
-                throw new Error(result.error || "Search failed. Please try again.");
+            // Validation
+            if (!keyword || !location) {
+                errorAlert.innerHTML = "<i class='fas fa-exclamation-circle'></i> Please enter both keyword and location!";
+                errorAlert.classList.add("show");
+                return;
             }
 
-            const data = result.data;
-            const isCached = result.cached;
-            nextPageToken = result.next_page_token;
+            // Reset pagination
+            currentKeyword = keyword;
+            currentLocation = location;
+            nextPageToken = null;
+            totalResultsCount = 0;  // Reset count for new search
 
-            // Check if data is empty
-            if (!data || data.length === 0) {
-                resultsContainer.innerHTML = `
+            // Show loader
+            loaderContainer.classList.add("active");
+            searchBtn.disabled = true;
+
+            const apiKey = document.getElementById("api-key") ? document.getElementById("api-key").value.trim() : "";
+            if (apiKey) localStorage.setItem("gmb_api_key", apiKey);
+
+            try {
+                const response = await fetch("/search", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ keyword, location, page_token: null, api_key: apiKey })
+                });
+
+                const result = await safeParseJSON(response);
+
+                // Hide loader
+                loaderContainer.classList.remove("active");
+                searchBtn.disabled = false;
+
+                if (!response.ok) {
+                    throw new Error(result.error || "Search failed. Please try again.");
+                }
+
+                const data = result.data;
+                const isCached = result.cached;
+                nextPageToken = result.next_page_token;
+
+                // Check if data is empty
+                if (!data || data.length === 0) {
+                    resultsContainer.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-inbox"></i>
                         <p>No results found. Try different keywords or location.</p>
                     </div>
                 `;
-                return;
-            }
+                    return;
+                }
 
-            // Display results
-            resultsContainer.innerHTML = `
+                // Display results
+                resultsContainer.innerHTML = `
                 <div style="margin-bottom: 20px;">
                     <h5><i class="fas fa-check-circle" style="color: #667eea;"></i> Found Results</h5>
                     ${isCached ? '<div class="cached-badge"><i class="fas fa-bolt"></i> Cached Result (Instant)</div>' : ''}
                 </div>
             `;
 
-            displayResults(data);
+                displayResults(data);
 
-            // Show load more button if there are more pages
-            if (nextPageToken) {
-                loadMoreContainer.style.display = "block";
-                document.getElementById("noMoreResults").style.display = "none";
-                document.getElementById("loadMoreBtn").style.display = "block";
-            } else {
-                document.getElementById("noMoreResults").style.display = "block";
-                document.getElementById("loadMoreBtn").style.display = "none";
-                loadMoreContainer.style.display = "block";
-            }
+                // Show load more button if there are more pages
+                if (nextPageToken) {
+                    loadMoreContainer.style.display = "block";
+                    document.getElementById("noMoreResults").style.display = "none";
+                    document.getElementById("loadMoreBtn").style.display = "block";
+                } else {
+                    document.getElementById("noMoreResults").style.display = "block";
+                    document.getElementById("loadMoreBtn").style.display = "none";
+                    loadMoreContainer.style.display = "block";
+                }
 
-        } catch (error) {
-            loaderContainer.classList.remove("active");
-            searchBtn.disabled = false;
-            errorAlert.innerHTML = `<i class='fas fa-exclamation-triangle'></i> ${error.message}`;
-            errorAlert.classList.add("show");
-            console.error("Error:", error);
-        }
-    }
-
-    // Allow search on Enter key
-    document.getElementById("keyword-multi").addEventListener("keypress", (e) => {
-        if (e.key === "Enter") searchMultipleLocations();
-    });
-    document.getElementById("locations-multi").addEventListener("keypress", (e) => {
-        if (e.ctrlKey && e.key === "Enter") searchMultipleLocations();
-    });
-
-    let currentKeyword = "";
-    let currentLocation = "";
-    let nextPageToken = null;
-    let isLoading = false;
-    let totalResultsCount = 0;  // Track total count across pages
-    let multiSearchResults = {};  // Store multiple location results
-    let batchSessionId = null;  // Track batch session
-    
-    // Batch processing for free-tier stability
-    async function searchBatch(keyword, locations, batchIndex = 0, batchSize = 2) {
-        const loaderContainer = document.getElementById("loaderContainer");
-        const loaderText = loaderContainer.querySelector(".loader-text");
-        
-        try {
-            if (!batchSessionId) {
-                batchSessionId = `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            }
-            
-            const apiKey = document.getElementById("api-key") ? document.getElementById("api-key").value.trim() : "";
-            if (apiKey) localStorage.setItem("gmb_api_key", apiKey);
-            
-            const response = await fetch("/search-batch", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    session_id: batchSessionId,
-                    keyword: keyword,
-                    locations: locations,
-                    batch_size: batchSize,
-                    batch_index: batchIndex,
-                    use_expansion: false,
-                    fetch_websites: true,
-                    api_key: apiKey
-                })
-            });
-            
-            const result = await safeParseJSON(response);
-            
-            if (!response.ok) {
-                throw new Error(result.error || "Batch search failed");
-            }
-            
-            if (result.batch_results) {
-                Object.assign(multiSearchResults, result.batch_results);
-            }
-            
-            const progress = result.progress;
-            loaderText.innerHTML = `🚀 Searching: ${progress.locations_completed}/${progress.total_locations} locations (Batch ${progress.current_batch}/${progress.total_batches}) - ${progress.percent_complete}% complete`;
-            
-            displayMultipleLocationResults(keyword, multiSearchResults);
-            
-            if (progress.has_next_batch) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                return await searchBatch(keyword, locations, progress.current_batch, batchSize);
-            }
-            
-        } catch (error) {
-            console.error("Batch search error:", error);
-            throw error;
-        }
-    }
-
-    async function searchMultipleLocations() {
-        const keyword = document.getElementById("keyword-multi").value.trim();
-        const locationsInput = document.getElementById("locations-multi").value.trim();
-        const errorAlert = document.getElementById("errorAlert");
-        const loaderContainer = document.getElementById("loaderContainer");
-        const resultsContainer = document.getElementById("resultsContainer");
-        const searchMultiBtn = document.getElementById("searchMultiBtn");
-        const loadMoreContainer = document.getElementById("loadMoreContainer");
-
-        // Clear previous results
-        errorAlert.classList.remove("show");
-        resultsContainer.innerHTML = "";
-        loadMoreContainer.style.display = "none";
-
-        // Validation
-        if (!keyword || !locationsInput) {
-            errorAlert.innerHTML = "<i class='fas fa-exclamation-circle'></i> Please enter keyword and locations!";
-            errorAlert.classList.add("show");
-            return;
-        }
-
-        const locations = locationsInput.split(",").map(loc => loc.trim()).filter(loc => loc);
-        
-        if (locations.length < 2) {
-            errorAlert.innerHTML = "<i class='fas fa-exclamation-circle'></i> Please enter at least 2 locations (separated by commas)!";
-            errorAlert.classList.add("show");
-            return;
-        }
-
-        // Show loader with start time
-        const startTime = Date.now();
-        loaderContainer.classList.add("active");
-        searchMultiBtn.disabled = true;
-        const loaderText = loaderContainer.querySelector(".loader-text");
-
-        // Use batch processing for > 5 locations to avoid timeouts
-        if (locations.length > 5) {
-            loaderText.innerHTML = `🚀 Starting batch search for ${locations.length} locations...`;
-            
-            try {
-                batchSessionId = null;
-                multiSearchResults = {};
-                
-                await searchBatch(keyword, locations, 0, 2);
-                
-                searchMultiBtn.disabled = false;
             } catch (error) {
                 loaderContainer.classList.remove("active");
-                searchMultiBtn.disabled = false;
+                searchBtn.disabled = false;
                 errorAlert.innerHTML = `<i class='fas fa-exclamation-triangle'></i> ${error.message}`;
                 errorAlert.classList.add("show");
                 console.error("Error:", error);
             }
-        } else {
-            // Use traditional search for <= 5 locations
-            const progressInterval = setInterval(() => {
-                const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                loaderText.innerHTML = `🚀 Searching ${locations.length} locations in parallel... (${elapsed}s)`;
-            }, 500);
+        }
+
+        // Allow search on Enter key
+        document.getElementById("keyword-multi").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") searchMultipleLocations();
+        });
+        document.getElementById("locations-multi").addEventListener("keypress", (e) => {
+            if (e.ctrlKey && e.key === "Enter") searchMultipleLocations();
+        });
+
+        let currentKeyword = "";
+        let currentLocation = "";
+        let nextPageToken = null;
+        let isLoading = false;
+        let totalResultsCount = 0;  // Track total count across pages
+        let multiSearchResults = {};  // Store multiple location results
+        let batchSessionId = null;  // Track batch session
+
+        // Batch processing for free-tier stability
+        async function searchBatch(keyword, locations, batchIndex = 0, batchSize = 2) {
+            const loaderContainer = document.getElementById("loaderContainer");
+            const loaderText = loaderContainer.querySelector(".loader-text");
 
             try {
+                if (!batchSessionId) {
+                    batchSessionId = `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                }
+
                 const apiKey = document.getElementById("api-key") ? document.getElementById("api-key").value.trim() : "";
                 if (apiKey) localStorage.setItem("gmb_api_key", apiKey);
-                
-                const response = await fetch("/search-multiple", {
+
+                const response = await fetch("/search-batch", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ 
-                        keyword, 
-                        locations: locationsInput,
+                    body: JSON.stringify({
+                        session_id: batchSessionId,
+                        keyword: keyword,
+                        locations: locations,
+                        batch_size: batchSize,
+                        batch_index: batchIndex,
+                        use_expansion: false,
+                        fetch_websites: true,
                         api_key: apiKey
                     })
                 });
 
-                clearInterval(progressInterval);
                 const result = await safeParseJSON(response);
 
-                // Hide loader
-                loaderContainer.classList.remove("active");
-                searchMultiBtn.disabled = false;
-
                 if (!response.ok) {
-                    throw new Error(result.error || "Search failed");
+                    throw new Error(result.error || "Batch search failed");
                 }
 
-                multiSearchResults = result.results;
-                displayMultipleLocationResults(keyword, result.results);
+                if (result.batch_results) {
+                    Object.assign(multiSearchResults, result.batch_results);
+                }
+
+                const progress = result.progress;
+                loaderText.innerHTML = `🚀 Searching: ${progress.locations_completed}/${progress.total_locations} locations (Batch ${progress.current_batch}/${progress.total_batches}) - ${progress.percent_complete}% complete`;
+
+                displayMultipleLocationResults(keyword, multiSearchResults);
+
+                if (progress.has_next_batch) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    return await searchBatch(keyword, locations, progress.current_batch, batchSize);
+                }
 
             } catch (error) {
-                clearInterval(progressInterval);
-                loaderContainer.classList.remove("active");
-                searchMultiBtn.disabled = false;
-                errorAlert.innerHTML = `<i class='fas fa-exclamation-triangle'></i> ${error.message}`;
-                errorAlert.classList.add("show");
+                console.error("Batch search error:", error);
+                throw error;
             }
         }
-    }
 
-    function displayMultipleLocationResults(keyword, allResults) {
-        const resultsContainer = document.getElementById("resultsContainer");
-        
-        // Count total websites found
-        let totalWebsites = 0;
-        for (let location in allResults) {
-            const results = allResults[location].results || allResults[location] || [];
-            results.forEach(result => {
-                if (result.website && result.website !== "N/A") {
-                    totalWebsites++;
+        async function searchMultipleLocations() {
+            const keyword = document.getElementById("keyword-multi").value.trim();
+            const locationsInput = document.getElementById("locations-multi").value.trim();
+            const errorAlert = document.getElementById("errorAlert");
+            const loaderContainer = document.getElementById("loaderContainer");
+            const resultsContainer = document.getElementById("resultsContainer");
+            const searchMultiBtn = document.getElementById("searchMultiBtn");
+            const loadMoreContainer = document.getElementById("loadMoreContainer");
+
+            // Clear previous results
+            errorAlert.classList.remove("show");
+            resultsContainer.innerHTML = "";
+            loadMoreContainer.style.display = "none";
+
+            // Validation
+            if (!keyword || !locationsInput) {
+                errorAlert.innerHTML = "<i class='fas fa-exclamation-circle'></i> Please enter keyword and locations!";
+                errorAlert.classList.add("show");
+                return;
+            }
+
+            const locations = locationsInput.split(",").map(loc => loc.trim()).filter(loc => loc);
+
+            if (locations.length < 2) {
+                errorAlert.innerHTML = "<i class='fas fa-exclamation-circle'></i> Please enter at least 2 locations (separated by commas)!";
+                errorAlert.classList.add("show");
+                return;
+            }
+
+            // Show loader with start time
+            const startTime = Date.now();
+            loaderContainer.classList.add("active");
+            searchMultiBtn.disabled = true;
+            const loaderText = loaderContainer.querySelector(".loader-text");
+
+            // Use batch processing for > 5 locations to avoid timeouts
+            if (locations.length > 5) {
+                loaderText.innerHTML = `🚀 Starting batch search for ${locations.length} locations...`;
+
+                try {
+                    batchSessionId = null;
+                    multiSearchResults = {};
+
+                    await searchBatch(keyword, locations, 0, 2);
+
+                    searchMultiBtn.disabled = false;
+                } catch (error) {
+                    loaderContainer.classList.remove("active");
+                    searchMultiBtn.disabled = false;
+                    errorAlert.innerHTML = `<i class='fas fa-exclamation-triangle'></i> ${error.message}`;
+                    errorAlert.classList.add("show");
+                    console.error("Error:", error);
                 }
-            });
+            } else {
+                // Use traditional search for <= 5 locations
+                const progressInterval = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    loaderText.innerHTML = `🚀 Searching ${locations.length} locations in parallel... (${elapsed}s)`;
+                }, 500);
+
+                try {
+                    const apiKey = document.getElementById("api-key") ? document.getElementById("api-key").value.trim() : "";
+                    if (apiKey) localStorage.setItem("gmb_api_key", apiKey);
+
+                    const response = await fetch("/search-multiple", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            keyword,
+                            locations: locationsInput,
+                            api_key: apiKey
+                        })
+                    });
+
+                    clearInterval(progressInterval);
+                    const result = await safeParseJSON(response);
+
+                    // Hide loader
+                    loaderContainer.classList.remove("active");
+                    searchMultiBtn.disabled = false;
+
+                    if (!response.ok) {
+                        throw new Error(result.error || "Search failed");
+                    }
+
+                    multiSearchResults = result.results;
+                    displayMultipleLocationResults(keyword, result.results);
+
+                } catch (error) {
+                    clearInterval(progressInterval);
+                    loaderContainer.classList.remove("active");
+                    searchMultiBtn.disabled = false;
+                    errorAlert.innerHTML = `<i class='fas fa-exclamation-triangle'></i> ${error.message}`;
+                    errorAlert.classList.add("show");
+                }
+            }
         }
 
-        let html = `
+        function displayMultipleLocationResults(keyword, allResults) {
+            const resultsContainer = document.getElementById("resultsContainer");
+
+            // Count total websites found
+            let totalWebsites = 0;
+            for (let location in allResults) {
+                const results = allResults[location].results || allResults[location] || [];
+                results.forEach(result => {
+                    if (result.website && result.website !== "N/A") {
+                        totalWebsites++;
+                    }
+                });
+            }
+
+            let html = `
             <div class="multi-search-info">
                 <i class="fas fa-chart-bar"></i> <strong>Deep Search Results for "${keyword}"</strong> | 
                 Total Websites Found: <strong>${totalWebsites}</strong> across all locations 🎯
@@ -813,14 +827,14 @@
                 <tbody>
         `;
 
-        for (let location in allResults) {
-            const results = allResults[location].results || allResults[location] || [];
-            const websites = results
-                .filter(r => r.website && r.website !== "N/A")
-                .map(r => r.website);
+            for (let location in allResults) {
+                const results = allResults[location].results || allResults[location] || [];
+                const websites = results
+                    .filter(r => r.website && r.website !== "N/A")
+                    .map(r => r.website);
 
-            if (websites.length > 0) {
-                html += `
+                if (websites.length > 0) {
+                    html += `
                     <tr>
                         <td class="location-header">${location} (${websites.length})</td>
                         <td class="website-cell">
@@ -832,145 +846,145 @@
                         </td>
                     </tr>
                 `;
-            } else {
-                html += `
+                } else {
+                    html += `
                     <tr>
                         <td class="location-header">${location}</td>
                         <td style="color: #999; font-style: italic;">No websites found</td>
                     </tr>
                 `;
+                }
             }
-        }
 
-        html += `
+            html += `
                 </tbody>
             </table>
         `;
 
-        resultsContainer.innerHTML = html;
-    }
+            resultsContainer.innerHTML = html;
+        }
 
-    function copyAllWebsites() {
-        let text = "Website Links\n";
-        text += "=".repeat(50) + "\n\n";
+        function copyAllWebsites() {
+            let text = "Website Links\n";
+            text += "=".repeat(50) + "\n\n";
 
-        for (let location in multiSearchResults) {
-            text += `\n📍 ${location}\n`;
-            text += "-".repeat(40) + "\n";
-            
-            const results = multiSearchResults[location].results || multiSearchResults[location] || [];
-            const websites = results
-                .filter(r => r.website && r.website !== "N/A")
-                .map(r => r.website);
+            for (let location in multiSearchResults) {
+                text += `\n📍 ${location}\n`;
+                text += "-".repeat(40) + "\n";
 
-            if (websites.length > 0) {
-                websites.forEach((w, idx) => {
-                    text += `${idx + 1}. ${w}\n`;
+                const results = multiSearchResults[location].results || multiSearchResults[location] || [];
+                const websites = results
+                    .filter(r => r.website && r.website !== "N/A")
+                    .map(r => r.website);
+
+                if (websites.length > 0) {
+                    websites.forEach((w, idx) => {
+                        text += `${idx + 1}. ${w}\n`;
+                    });
+                } else {
+                    text += "No websites found\n";
+                }
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById("copyAllBtn");
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            });
+        }
+
+        function downloadCSV() {
+            let csv = "Location,Website Link\n";
+
+            for (let location in multiSearchResults) {
+                const results = multiSearchResults[location].results || multiSearchResults[location] || [];
+                const websites = results
+                    .filter(r => r.website && r.website !== "N/A")
+                    .map(r => r.website);
+
+                websites.forEach(w => {
+                    csv += `"${location}","${w}"\n`;
                 });
-            } else {
-                text += "No websites found\n";
-            }
-        }
-
-        navigator.clipboard.writeText(text).then(() => {
-            const btn = document.getElementById("copyAllBtn");
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-            }, 2000);
-        });
-    }
-
-    function downloadCSV() {
-        let csv = "Location,Website Link\n";
-
-        for (let location in multiSearchResults) {
-            const results = multiSearchResults[location].results || multiSearchResults[location] || [];
-            const websites = results
-                .filter(r => r.website && r.website !== "N/A")
-                .map(r => r.website);
-
-            websites.forEach(w => {
-                csv += `"${location}","${w}"\n`;
-            });
-        }
-
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `websites_${new Date().getTime()}.csv`;
-        a.click();
-    }
-
-    async function loadMore() {
-        if (!nextPageToken || isLoading) return;
-
-        isLoading = true;
-        const loadMoreBtn = document.getElementById("loadMoreBtn");
-        const errorAlert = document.getElementById("errorAlert");
-        loadMoreBtn.disabled = true;
-        loadMoreBtn.innerHTML = '<span class="spinner-small"></span> Loading...';
-
-        try {
-            const apiKey = document.getElementById("api-key") ? document.getElementById("api-key").value.trim() : "";
-            
-            const response = await fetch("/search", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
-                    keyword: currentKeyword, 
-                    location: currentLocation, 
-                    page_token: nextPageToken,
-                    api_key: apiKey
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to load more results");
             }
 
-            const result = await safeParseJSON(response);
-            const data = result.data;
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `websites_${new Date().getTime()}.csv`;
+            a.click();
+        }
 
-            nextPageToken = result.next_page_token;
+        async function loadMore() {
+            if (!nextPageToken || isLoading) return;
 
-            // Display new results
-            displayResults(data);
+            isLoading = true;
+            const loadMoreBtn = document.getElementById("loadMoreBtn");
+            const errorAlert = document.getElementById("errorAlert");
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.innerHTML = '<span class="spinner-small"></span> Loading...';
 
-            // Update button state
-            if (nextPageToken) {
+            try {
+                const apiKey = document.getElementById("api-key") ? document.getElementById("api-key").value.trim() : "";
+
+                const response = await fetch("/search", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        keyword: currentKeyword,
+                        location: currentLocation,
+                        page_token: nextPageToken,
+                        api_key: apiKey
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to load more results");
+                }
+
+                const result = await safeParseJSON(response);
+                const data = result.data;
+
+                nextPageToken = result.next_page_token;
+
+                // Display new results
+                displayResults(data);
+
+                // Update button state
+                if (nextPageToken) {
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.innerHTML = '<i class="fas fa-arrow-down"></i> Load More Results';
+                    document.getElementById("noMoreResults").style.display = "none";
+                } else {
+                    loadMoreBtn.style.display = "none";
+                    document.getElementById("noMoreResults").style.display = "block";
+                }
+
+                isLoading = false;
+
+            } catch (error) {
+                errorAlert.innerHTML = `<i class='fas fa-exclamation-triangle'></i> ${error.message}`;
+                errorAlert.classList.add("show");
                 loadMoreBtn.disabled = false;
                 loadMoreBtn.innerHTML = '<i class="fas fa-arrow-down"></i> Load More Results';
-                document.getElementById("noMoreResults").style.display = "none";
-            } else {
-                loadMoreBtn.style.display = "none";
-                document.getElementById("noMoreResults").style.display = "block";
+                isLoading = false;
             }
-
-            isLoading = false;
-
-        } catch (error) {
-            errorAlert.innerHTML = `<i class='fas fa-exclamation-triangle'></i> ${error.message}`;
-            errorAlert.classList.add("show");
-            loadMoreBtn.disabled = false;
-            loadMoreBtn.innerHTML = '<i class="fas fa-arrow-down"></i> Load More Results';
-            isLoading = false;
         }
-    }
 
-    function displayResults(data) {
-        const resultsContainer = document.getElementById("resultsContainer");
-        let html = resultsContainer.innerHTML;
+        function displayResults(data) {
+            const resultsContainer = document.getElementById("resultsContainer");
+            let html = resultsContainer.innerHTML;
 
-        data.forEach((item) => {
-            totalResultsCount++;  // Increment total count
-            const website = item.website && item.website !== "N/A" 
-                ? `<a href="https://${item.website.replace(/^https?:\/\//, '')}" target="_blank" class="website-link"><i class="fas fa-globe"></i> ${item.website}</a>`
-                : '<span class="no-website">N/A</span>';
+            data.forEach((item) => {
+                totalResultsCount++;  // Increment total count
+                const website = item.website && item.website !== "N/A"
+                    ? `<a href="https://${item.website.replace(/^https?:\/\//, '')}" target="_blank" class="website-link"><i class="fas fa-globe"></i> ${item.website}</a>`
+                    : '<span class="no-website">N/A</span>';
 
-            html += `
+                html += `
                 <div class="result-card">
                     <div class="result-header">
                         <div class="business-name">${totalResultsCount}. ${item.name}</div>
@@ -991,11 +1005,12 @@
                     </div>
                 </div>
             `;
-        });
+            });
 
-        resultsContainer.innerHTML = html;
-    }
-</script>
+            resultsContainer.innerHTML = html;
+        }
+    </script>
 
 </body>
+
 </html>
