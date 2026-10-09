@@ -120,7 +120,17 @@ class GooglePlacesAPIClient:
         try:
             from playwright.sync_api import sync_playwright
             with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
+                try:
+                    browser = p.chromium.launch(headless=True)
+                except Exception as e:
+                    if "Executable doesn't exist" in str(e):
+                        logger.info("Playwright browser missing. Installing chromium automatically...")
+                        import os
+                        os.system("playwright install chromium")
+                        browser = p.chromium.launch(headless=True)
+                    else:
+                        raise e
+                
                 page = browser.new_page()
                 
                 url = f"https://www.google.com/maps/search/{query.replace(' ', '+')}"
