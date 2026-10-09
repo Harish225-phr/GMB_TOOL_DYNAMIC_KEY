@@ -194,4 +194,4 @@ config = AppConfig()
 
 # Validate configuration
 if not config.GOOGLE_API_KEY:
-    print("⚠️  WARNING: Google API key not configured. Check environment variables.")
+    print("WARNING: Google API key not configured. Check environment variables. Using free fallback.")

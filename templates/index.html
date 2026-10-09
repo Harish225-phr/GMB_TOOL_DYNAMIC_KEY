@@ -462,10 +462,6 @@
         </div>
 
         <div class="search-card">
-            <div style="margin-bottom: 15px;">
-                <input type="password" id="api-key" class="form-control"
-                    placeholder="🔑 Enter Google Maps API Key (Optional if already set on server)">
-            </div>
             <div class="search-row" style="grid-template-columns: 1fr auto;">
                 <div>
                     <input type="text" id="keyword-multi" class="form-control"
@@ -576,10 +572,14 @@
                     throw new Error(result.error || "Search failed. Please try again.");
                 }
 
-                const data = result.data;
+                const data = result.results || result.data || [];
                 const isCached = result.cached;
                 nextPageToken = result.next_page_token;
 
+                // Save all results for frontend lazy loading
+                window.allSingleResults = data;
+                window.currentRenderIndex = 0;
+                
                 // Check if data is empty
                 if (!data || data.length === 0) {
                     resultsContainer.innerHTML = `
@@ -599,18 +599,9 @@
                 </div>
             `;
 
-                displayResults(data);
-
-                // Show load more button if there are more pages
-                if (nextPageToken) {
-                    loadMoreContainer.style.display = "block";
-                    document.getElementById("noMoreResults").style.display = "none";
-                    document.getElementById("loadMoreBtn").style.display = "block";
-                } else {
-                    document.getElementById("noMoreResults").style.display = "block";
-                    document.getElementById("loadMoreBtn").style.display = "none";
-                    loadMoreContainer.style.display = "block";
-                }
+                loadMoreContainer.style.display = "block";
+                renderNextChunk();
+                setupIntersectionObserver();
 
             } catch (error) {
                 loaderContainer.classList.remove("active");
@@ -659,7 +650,7 @@
                         locations: locations,
                         batch_size: batchSize,
                         batch_index: batchIndex,
-                        use_expansion: false,
+                        use_expansion: true,
                         fetch_websites: true,
                         api_key: apiKey
                     })
@@ -792,121 +783,152 @@
         function displayMultipleLocationResults(keyword, allResults) {
             const resultsContainer = document.getElementById("resultsContainer");
 
-            // Count total websites found
-            let totalWebsites = 0;
+            let totalBusinesses = 0;
+            let flatResults = [];
+            
             for (let location in allResults) {
                 const results = allResults[location].results || allResults[location] || [];
-                results.forEach(result => {
-                    if (result.website && result.website !== "N/A") {
-                        totalWebsites++;
-                    }
-                });
+                totalBusinesses += results.length;
+                results.forEach(r => flatResults.push({ ...r, location: location }));
             }
 
             let html = `
-            <div class="multi-search-info">
-                <i class="fas fa-chart-bar"></i> <strong>Deep Search Results for "${keyword}"</strong> | 
-                Total Websites Found: <strong>${totalWebsites}</strong> across all locations 🎯
+            <div class="multi-search-info" style="background: white; border: none; padding: 0 0 15px 0;">
+                Found ${totalBusinesses} unique businesses (${flatResults.filter(r => r.website && r.website !== 'N/A' && r.website !== '').length} with websites).
             </div>
-            <div style="margin-bottom: 15px;">
-                <button onclick="copyAllWebsites()" class="copy-btn" id="copyAllBtn">
-                    <i class="fas fa-copy"></i> Copy All Links
+            <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <button onclick="copyAllWebsites()" class="copy-btn" id="copyAllBtn" style="background: #20c997; box-shadow: none; padding: 8px 15px;">
+                    COPY ALL WEBSITES
                 </button>
-                <button onclick="downloadCSV()" class="copy-btn" style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);">
-                    <i class="fas fa-download"></i> Download CSV
+                <button onclick="copyFullData()" class="copy-btn" id="copyFullDataBtn" style="background: #20c997; box-shadow: none; padding: 8px 15px;">
+                    COPY FULL DATA
+                </button>
+                <button onclick="downloadCSV()" class="copy-btn" style="background: white; color: #333; border: 1px solid #ddd; box-shadow: none; padding: 8px 15px;">
+                    DOWNLOAD CSV
+                </button>
+                <button onclick="downloadJSON()" class="copy-btn" style="background: white; color: #333; border: 1px solid #ddd; box-shadow: none; padding: 8px 15px;">
+                    DOWNLOAD JSON
+                </button>
+                <button onclick="window.location.reload()" class="copy-btn" style="background: transparent; color: #667eea; border: none; box-shadow: none; font-weight: 600;">
+                    New Search
                 </button>
             </div>
 
-            <table class="results-table">
-                <thead>
+            <table class="results-table" style="box-shadow: none; border: 1px solid #eee;">
+                <thead style="background: #f8f9fa; color: #555;">
                     <tr>
-                        <th style="width: 20%;">📍 Location</th>
-                        <th style="width: 80%;">🌐 Website Links</th>
+                        <th style="padding: 15px 10px;">#</th>
+                        <th style="padding: 15px 10px;">Business Name</th>
+                        <th style="padding: 15px 10px;">Location</th>
+                        <th style="padding: 15px 10px;">Website</th>
+                        <th style="padding: 15px 10px;">Rating</th>
+                        <th style="padding: 15px 10px;">Reviews</th>
+                        <th style="padding: 15px 10px;">Maps</th>
                     </tr>
                 </thead>
                 <tbody>
-        `;
+            `;
 
-            for (let location in allResults) {
-                const results = allResults[location].results || allResults[location] || [];
-                const websites = results
-                    .filter(r => r.website && r.website !== "N/A")
-                    .map(r => r.website);
+            if (flatResults.length === 0) {
+                html += `<tr><td colspan="7" style="text-align: center; padding: 20px;">No results found</td></tr>`;
+            } else {
+                flatResults.forEach((r, idx) => {
+                    const address = r.formatted_address || r.address || 'N/A';
+                    let websiteHtml = `<span style="color: #999;">N/A</span>`;
+                    if (r.website && r.website !== "N/A" && r.website !== "") {
+                        const webUrl = r.website.startsWith('http') ? r.website : 'https://' + r.website;
+                        const shortUrl = r.website.replace(/^https?:\/\//, '').split('/')[0];
+                        websiteHtml = `<a href="${webUrl}" target="_blank" style="color: #667eea; text-decoration: none;">${shortUrl}</a> <button onclick="navigator.clipboard.writeText('${webUrl}')" style="border: 1px solid #ddd; background: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; margin-left: 5px;">Copy</button>`;
+                    }
+                    
+                    const mapsLink = r.place_id && r.place_id !== 'mock_id' ? `https://www.google.com/maps/place/?q=place_id:${r.place_id}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name + ' ' + r.location)}`;
 
-                if (websites.length > 0) {
                     html += `
-                    <tr>
-                        <td class="location-header">${location} (${websites.length})</td>
-                        <td class="website-cell">
-                            ${websites.map((w, idx) => `
-                                <div style="margin-bottom: 8px;">
-                                    ${idx + 1}. <a href="https://${w.replace(/^https?:\/\//, '')}" target="_blank">${w}</a>
-                                </div>
-                            `).join('')}
+                    <tr style="border-bottom: 1px solid #f1f3f5;">
+                        <td style="padding: 15px 10px;">${idx + 1}</td>
+                        <td style="padding: 15px 10px;">
+                            <strong style="color: #212529;">${r.name || 'Unknown Business'}</strong><br>
+                            <small style="color: #6c757d;">${address}</small>
                         </td>
+                        <td style="padding: 15px 10px;">${r.location}</td>
+                        <td style="padding: 15px 10px;">${websiteHtml}</td>
+                        <td style="padding: 15px 10px;">${r.rating || 0}</td>
+                        <td style="padding: 15px 10px;">${r.reviews || r.user_ratings_total || 0}</td>
+                        <td style="padding: 15px 10px;"><a href="${mapsLink}" target="_blank" style="color: #667eea; text-decoration: none;">Map</a></td>
                     </tr>
-                `;
-                } else {
-                    html += `
-                    <tr>
-                        <td class="location-header">${location}</td>
-                        <td style="color: #999; font-style: italic;">No websites found</td>
-                    </tr>
-                `;
-                }
+                    `;
+                });
             }
 
             html += `
                 </tbody>
             </table>
-        `;
+            `;
 
             resultsContainer.innerHTML = html;
         }
 
         function copyAllWebsites() {
-            let text = "Website Links\n";
-            text += "=".repeat(50) + "\n\n";
-
+            let websites = [];
             for (let location in multiSearchResults) {
-                text += `\n📍 ${location}\n`;
-                text += "-".repeat(40) + "\n";
-
                 const results = multiSearchResults[location].results || multiSearchResults[location] || [];
-                const websites = results
-                    .filter(r => r.website && r.website !== "N/A")
-                    .map(r => r.website);
-
-                if (websites.length > 0) {
-                    websites.forEach((w, idx) => {
-                        text += `${idx + 1}. ${w}\n`;
-                    });
-                } else {
-                    text += "No websites found\n";
-                }
+                results.forEach(r => {
+                    if (r.website && r.website !== "N/A" && r.website !== "") {
+                        websites.push(r.website);
+                    }
+                });
             }
 
-            navigator.clipboard.writeText(text).then(() => {
+            navigator.clipboard.writeText(websites.join('\\n')).then(() => {
                 const btn = document.getElementById("copyAllBtn");
                 const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                }, 2000);
+                btn.innerHTML = 'COPIED!';
+                setTimeout(() => { btn.innerHTML = originalText; }, 2000);
             });
+        }
+        
+        function copyFullData() {
+            let data = "Business Name\\tLocation\\tWebsite\\tRating\\tReviews\\n";
+            for (let location in multiSearchResults) {
+                const results = multiSearchResults[location].results || multiSearchResults[location] || [];
+                results.forEach(r => {
+                    data += `${r.name}\\t${location}\\t${r.website || 'N/A'}\\t${r.rating || 0}\\t${r.reviews || r.user_ratings_total || 0}\\n`;
+                });
+            }
+            navigator.clipboard.writeText(data).then(() => {
+                const btn = document.getElementById("copyFullDataBtn");
+                const originalText = btn.innerHTML;
+                btn.innerHTML = 'COPIED!';
+                setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+            });
+        }
+        
+        function downloadJSON() {
+            let flatResults = [];
+            for (let location in multiSearchResults) {
+                const results = multiSearchResults[location].results || multiSearchResults[location] || [];
+                results.forEach(r => flatResults.push({ ...r, location: location }));
+            }
+            const blob = new Blob([JSON.stringify(flatResults, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `results_${new Date().getTime()}.json`;
+            a.click();
         }
 
         function downloadCSV() {
-            let csv = "Location,Website Link\n";
+            let csv = "Business Name,Location,Address,Phone,Website,Rating,Reviews\\n";
 
             for (let location in multiSearchResults) {
                 const results = multiSearchResults[location].results || multiSearchResults[location] || [];
-                const websites = results
-                    .filter(r => r.website && r.website !== "N/A")
-                    .map(r => r.website);
-
-                websites.forEach(w => {
-                    csv += `"${location}","${w}"\n`;
+                
+                results.forEach(r => {
+                    const name = (r.name || "").replace(/"/g, '""');
+                    const addr = (r.formatted_address || r.address || "").replace(/"/g, '""');
+                    const phone = (r.formatted_phone_number || r.phone || "").replace(/"/g, '""');
+                    const web = (r.website && r.website !== "N/A" ? r.website : "");
+                    csv += `"${name}","${location}","${addr}","${phone}","${web}","${r.rating || 0}","${r.reviews || r.user_ratings_total || 0}"\n`;
                 });
             }
 
@@ -919,11 +941,20 @@
         }
 
         async function loadMore() {
-            if (!nextPageToken || isLoading) return;
+            if (isLoading) return;
+            
+            // If we have unrendered results from geo-grid, render them!
+            if (window.allSingleResults && window.currentRenderIndex < window.allSingleResults.length) {
+                renderNextChunk();
+                return;
+            }
+            
+            if (!nextPageToken) return;
 
             isLoading = true;
             const loadMoreBtn = document.getElementById("loadMoreBtn");
             const errorAlert = document.getElementById("errorAlert");
+            loadMoreBtn.style.display = "block";
             loadMoreBtn.disabled = true;
             loadMoreBtn.innerHTML = '<span class="spinner-small"></span> Loading...';
 
@@ -946,7 +977,7 @@
                 }
 
                 const result = await safeParseJSON(response);
-                const data = result.data;
+                const data = result.results || result.data || [];
 
                 nextPageToken = result.next_page_token;
 
@@ -954,7 +985,7 @@
                 displayResults(data);
 
                 // Update button state
-                if (nextPageToken) {
+                if (nextPageToken || (window.allSingleResults && window.currentRenderIndex < window.allSingleResults.length)) {
                     loadMoreBtn.disabled = false;
                     loadMoreBtn.innerHTML = '<i class="fas fa-arrow-down"></i> Load More Results';
                     document.getElementById("noMoreResults").style.display = "none";
@@ -972,6 +1003,48 @@
                 loadMoreBtn.innerHTML = '<i class="fas fa-arrow-down"></i> Load More Results';
                 isLoading = false;
             }
+        }
+        
+        function renderNextChunk() {
+            const chunkSize = 20;
+            const startIndex = window.currentRenderIndex;
+            const endIndex = Math.min(startIndex + chunkSize, window.allSingleResults.length);
+            const chunk = window.allSingleResults.slice(startIndex, endIndex);
+            
+            if (chunk.length > 0) {
+                displayResults(chunk);
+                window.currentRenderIndex = endIndex;
+            }
+            
+            const loadMoreBtn = document.getElementById("loadMoreBtn");
+            const noMoreResults = document.getElementById("noMoreResults");
+            
+            if (window.currentRenderIndex >= window.allSingleResults.length && !nextPageToken) {
+                loadMoreBtn.style.display = "none";
+                noMoreResults.style.display = "block";
+            } else {
+                loadMoreBtn.style.display = "block";
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.innerHTML = '<i class="fas fa-arrow-down"></i> Load More Results';
+                noMoreResults.style.display = "none";
+            }
+        }
+        
+        function setupIntersectionObserver() {
+            const loadMoreBtn = document.getElementById("loadMoreBtn");
+            if (window.lazyLoadObserver) {
+                window.lazyLoadObserver.disconnect();
+            }
+            
+            window.lazyLoadObserver = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    if (!isLoading && (nextPageToken || (window.allSingleResults && window.currentRenderIndex < window.allSingleResults.length))) {
+                        loadMore();
+                    }
+                }
+            }, { rootMargin: "200px" });
+            
+            window.lazyLoadObserver.observe(loadMoreBtn);
         }
 
         function displayResults(data) {

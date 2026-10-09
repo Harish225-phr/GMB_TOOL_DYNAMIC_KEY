@@ -137,7 +137,12 @@ class LeadScraperEngine:
                     keyword=keyword,
                     location=location,
                     results=[
-                        BusinessLead(**r) for r in cached.get("results", [])
+                        BusinessLead(
+                            name=r.get("name"),
+                            rating=float(r["rating"]) if r.get("rating") and r.get("rating") != "N/A" else None,
+                            reviews_count=int(r["reviews"]) if r.get("reviews") and r.get("reviews") != "N/A" else None,
+                            website=r.get("website") if r.get("website") != "N/A" else None
+                        ) for r in cached.get("results", [])
                     ],
                     next_page_token=cached.get("next_page_token"),
                     total_results_found=len(cached.get("results", [])),
@@ -186,6 +191,7 @@ class LeadScraperEngine:
                         name=place.get("name"),
                         rating=place.get("rating"),
                         reviews_count=place.get("user_ratings_total"),
+                        website=place.get("website"),
                         place_id=place.get("place_id"),
                         location=location,
                     )
@@ -207,15 +213,15 @@ class LeadScraperEngine:
                 logger.error(f"Error fetching page {page_count}: {str(e)}")
                 break
         
-        # Fetch websites if enabled
-        if place_ids:
+        # Fetch websites if enabled and not fallback mode
+        if place_ids and api_key != "NOMINATIM_FALLBACK":
             websites = self.website_fetcher.fetch_websites_if_needed(
                 place_ids,
                 fetch_websites,
                 api_key=api_key
             )
             for result in results:
-                if result.place_id in websites:
+                if result.place_id in websites and websites[result.place_id]:
                     result.website = websites[result.place_id]
         
         self.metrics["total_results_fetched"] += len(results)

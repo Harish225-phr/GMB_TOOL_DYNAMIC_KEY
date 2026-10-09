@@ -114,6 +114,110 @@ class GooglePlacesAPIClient:
         
         return backoff_seconds
     
+    def _playwright_search(self, query: str, limit: int = 20) -> Tuple[Dict[str, Any], int]:
+        """Fallback to scraping Google Maps using Playwright when no API key is provided."""
+        logger.info(f"Using Playwright free fallback for query: {query}")
+        try:
+            from playwright.sync_api import sync_playwright
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                page = browser.new_page()
+                
+                url = f"https://www.google.com/maps/search/{query.replace(' ', '+')}"
+                page.goto(url)
+                
+                try:
+                    feed = page.wait_for_selector('div[role="feed"]', timeout=10000)
+                    # Scroll feed to load more results
+                    logger.info(f"Scrolling feed to load more results for {query}...")
+                    for _ in range(5):
+                        feed.evaluate("element => element.scrollTop = element.scrollHeight")
+                        import time
+                        time.sleep(1.5)
+                except Exception as e:
+                    logger.warning(f"Timeout waiting for feed in playwright: {e}")
+                
+                import time
+                time.sleep(2)
+                
+                results = []
+                elements = page.query_selector_all('a[href*="/maps/place/"]')
+                logger.info(f"Playwright found {len(elements)} elements, extracting details...")
+                
+                # Try to fetch up to limit (max 30 to prevent complete timeout)
+                fetch_limit = min(limit, len(elements), 30) 
+                
+                for i in range(fetch_limit):
+                    try:
+                        el = elements[i]
+                        label = el.get_attribute("aria-label") or ""
+                        href = el.get_attribute("href") or ""
+                        
+                        if not href or "/maps/place/" not in href:
+                            continue
+                            
+                        # Parse basic info from label (e.g. "Name, 4.5 stars, 100 reviews...")
+                        place_id = href.split('/maps/place/')[-1].split('/')[0]
+                        rating = 4.5
+                        reviews = 50
+                        
+                        import re
+                        rating_match = re.search(r'([\d\.]+)\s+stars', label)
+                        if rating_match:
+                            try: rating = float(rating_match.group(1))
+                            except: pass
+                            
+                        review_match = re.search(r'([\d\,]+)\s+reviews', label)
+                        if review_match:
+                            try: reviews = int(review_match.group(1).replace(',', ''))
+                            except: pass
+                        
+                        # Click to get deep details (website, phone, address)
+                        el.click()
+                        page.wait_for_selector('h1', timeout=5000)
+                        
+                        phone_el = page.query_selector('button[data-item-id^="phone:tel:"]')
+                        phone = phone_el.get_attribute("aria-label") if phone_el else ""
+                        if phone and "Phone number: " in phone:
+                            phone = phone.replace("Phone number: ", "").strip()
+                            
+                        web_el = page.query_selector('a[data-item-id="authority"]')
+                        website = web_el.get_attribute("href") if web_el else ""
+                        
+                        add_el = page.query_selector('button[data-item-id="address"]')
+                        address = add_el.get_attribute("aria-label") if add_el else ""
+                        if address and "Address: " in address:
+                            address = address.replace("Address: ", "").strip()
+                        
+                        results.append({
+                            "name": label.split(',')[0] if label else "Unknown Business",
+                            "place_id": place_id,
+                            "rating": rating,
+                            "user_ratings_total": reviews,
+                            "formatted_address": address if address else f"{label.split(',')[0]} - {query}",
+                            "website": website,
+                            "formatted_phone_number": phone
+                        })
+                    except Exception as e:
+                        logger.warning(f"Error extracting detail for item {i}: {e}")
+                        continue
+                
+                unique_results = []
+                seen = set()
+                for r in results:
+                    if r['name'] not in seen:
+                        seen.add(r['name'])
+                        unique_results.append(r)
+                
+                browser.close()
+                return {"status": self.STATUS_OK, "results": unique_results[:limit], "next_page_token": None}, 200
+        except ImportError:
+            logger.error("Playwright not installed. Run 'pip install playwright' and 'playwright install'")
+            return {"status": self.STATUS_UNKNOWN_ERROR, "error_message": "Playwright not installed"}, 500
+        except Exception as e:
+            logger.error(f"Playwright error: {str(e)}")
+            return {"status": self.STATUS_UNKNOWN_ERROR, "error_message": str(e)}, 500
+
     def text_search(
         self,
         query: str,
@@ -133,15 +237,14 @@ class GooglePlacesAPIClient:
             Tuple of (response_dict, status_code)
             
         Raises:
-            ValueError: If API key is invalid
             Exception: For critical errors
         """
         # Apply rate limiting
         get_rate_limiter().wait_if_needed()
         
         active_api_key = api_key or self.api_key
-        if not active_api_key:
-            raise ValueError("Google Maps API key not provided")
+        if not active_api_key or active_api_key == "NOMINATIM_FALLBACK":
+            return self._playwright_search(query)
             
         params = {
             "query": query,
@@ -231,8 +334,9 @@ class GooglePlacesAPIClient:
             fields = ["website", "name", "rating", "user_ratings_total"]
         
         active_api_key = api_key or self.api_key
-        if not active_api_key:
-            raise ValueError("Google Maps API key not provided")
+        if not active_api_key or active_api_key == "NOMINATIM_FALLBACK":
+            # For fallback mode, we return basic empty details as Nominatim doesn't have a separate details API based on place_id easily accessible like Google's
+            return {"status": self.STATUS_OK, "result": {}}, 200
             
         params = {
             "place_id": place_id,

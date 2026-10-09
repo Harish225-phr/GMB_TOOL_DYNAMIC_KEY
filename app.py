@@ -54,8 +54,11 @@ def initialize_scraper():
         logger.info(f"✅ API Key configured (first 10 chars: {config.GOOGLE_API_KEY[:10]}...)")
     
     try:
+        # Fallback to NOMINATIM_FALLBACK if no API key is provided
+        api_key_to_use = config.GOOGLE_API_KEY if config.GOOGLE_API_KEY else "NOMINATIM_FALLBACK"
+        
         scraper_engine = LeadScraperEngine(
-            api_key=config.GOOGLE_API_KEY if config.GOOGLE_API_KEY else None,
+            api_key=api_key_to_use,
             enable_caching=config.CACHE_ENABLED,
             enable_geo_expansion=True,
             fetch_websites_by_default=config.FETCH_WEBSITES_BY_DEFAULT,
@@ -84,9 +87,14 @@ def log_error(msg):
 
 
 # Global error handler to ensure all responses are valid JSON
+from werkzeug.exceptions import HTTPException
+
 @app.errorhandler(Exception)
 def handle_error(error):
     """Catch all unhandled exceptions and return proper JSON error"""
+    if isinstance(error, HTTPException):
+        return jsonify({"error": error.name, "details": error.description}), error.code
+
     error_msg = str(error)
     log_error(f"Unhandled exception: {error_msg}")
     import traceback
@@ -139,7 +147,13 @@ def home():
     """Serve frontend."""
     return render_template("index.html")
 
+@app.route("/favicon.ico")
+def favicon():
+    return "", 204
 
+@app.route("/.well-known/appspecific/com.chrome.devtools.json")
+def devtools():
+    return "", 204
 @app.route("/search", methods=["POST"])
 def search():
     """
@@ -162,14 +176,7 @@ def search():
                 "details": "Google API Key not configured. Set GOOGLE_MAPS_API_KEY environment variable."
             }), 503
         
-        api_key = request.json.get("api_key") or config.GOOGLE_API_KEY
-        
-        # Check if API key is configured
-        if not api_key:
-            return jsonify({
-                "error": "API Key not configured",
-                "details": "Please provide an API key in the request or set GOOGLE_MAPS_API_KEY environment variable"
-            }), 401
+        api_key = request.json.get("api_key") or config.GOOGLE_API_KEY or "NOMINATIM_FALLBACK"
         
         # Validate request
         if not request.json:
@@ -263,12 +270,7 @@ def search_batch():
                 "details": "Google API Key not configured. Set GOOGLE_MAPS_API_KEY environment variable."
             }), 503
         
-        api_key = request.json.get("api_key") or config.GOOGLE_API_KEY
-        if not api_key:
-            return jsonify({
-                "error": "API Key not configured",
-                "details": "Please provide an API key in the request or set GOOGLE_MAPS_API_KEY environment variable"
-            }), 401
+        api_key = request.json.get("api_key") or config.GOOGLE_API_KEY or "NOMINATIM_FALLBACK"
         
         if not request.json:
             return jsonify({"error": "Invalid JSON request"}), 400
@@ -446,13 +448,7 @@ def search_multiple():
                 "details": "Google API Key not configured. Set GOOGLE_MAPS_API_KEY environment variable."
             }), 503
         
-        api_key = request.json.get("api_key") or config.GOOGLE_API_KEY
-        # Check if API key is configured
-        if not api_key:
-            return jsonify({
-                "error": "API Key not configured",
-                "details": "Please provide an API key in the request or set GOOGLE_MAPS_API_KEY environment variable"
-            }), 401
+        api_key = request.json.get("api_key") or config.GOOGLE_API_KEY or "NOMINATIM_FALLBACK"
         
         if not request.json:
             return jsonify({"error": "Invalid JSON request"}), 400
