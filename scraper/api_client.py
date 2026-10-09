@@ -134,7 +134,7 @@ class GooglePlacesAPIClient:
                 page = browser.new_page()
                 
                 url = f"https://www.google.com/maps/search/{query.replace(' ', '+')}"
-                page.goto(url)
+                page.goto(url, wait_until="domcontentloaded", timeout=60000)
                 
                 try:
                     feed = page.wait_for_selector('div[role="feed"]', timeout=10000)
