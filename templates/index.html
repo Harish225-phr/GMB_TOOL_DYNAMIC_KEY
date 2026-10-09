@@ -499,11 +499,12 @@
     </div>
 
     <script>
-        // Load API key on start
+        // Load API key on start (Removed as input field was removed)
         document.addEventListener("DOMContentLoaded", () => {
+            const apiKeyInput = document.getElementById("api-key");
             const savedApiKey = localStorage.getItem("gmb_api_key");
-            if (savedApiKey) {
-                document.getElementById("api-key").value = savedApiKey;
+            if (savedApiKey && apiKeyInput) {
+                apiKeyInput.value = savedApiKey;
             }
         });
 
